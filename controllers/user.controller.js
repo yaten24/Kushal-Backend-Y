@@ -95,7 +95,8 @@ export const login = async (req, res) => {
       .status(200)
       .cookie("token", token, {
         httpOnly: true,
-        sameSite: "strict",
+        secure: true,
+        sameSite: "none",
         maxAge: 24 * 60 * 60 * 1000, // 1 day
       })
       .json({
@@ -177,3 +178,4 @@ export const getContacts = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
