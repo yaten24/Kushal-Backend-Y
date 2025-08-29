@@ -132,17 +132,33 @@ export const logout = async (req, res) => {
 
 export const getCurrentUser = (req, res) => {
   try {
-    // isAuthenticated middleware se req.user set ho chuka hoga
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. Please login again.",
+      });
+    }
+
+    // Password, tokens, etc. exclude karo
+    const { password, refreshToken, ...safeUser } = req.user._doc || req.user;
+
     return res.status(200).json({
       success: true,
+      user: safeUser,
     });
   } catch (error) {
+    console.error("❌ Error in getCurrentUser:", error.message);
+
     return res.status(500).json({
       success: false,
-      message: "Something went wrong while fetching user",
+      message:
+        process.env.NODE_ENV === "production"
+          ? "Internal server error"
+          : error.message, // dev me actual error show hoga
     });
   }
 };
+
 
 // ✅ Save contact message
 export const createContact = async (req, res) => {
