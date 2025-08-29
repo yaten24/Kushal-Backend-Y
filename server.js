@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import userRoute from "./routes/user.route.js";
-import quizRoute from "./routes/Quiz.route.js";
+import quizRoute from "./routes/quiz.route.js";
 import db_connect from "./database/db.connect.js";
 
 // Load environment variables early
@@ -57,3 +57,4 @@ const startServer = async () => {
 };
 
 startServer();
+
