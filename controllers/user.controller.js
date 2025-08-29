@@ -6,12 +6,16 @@ import dotenv from "dotenv";
 dotenv.config({});
 
 // ========================= REGISTER =========================
+import bcrypt from "bcryptjs";
+import User from "../models/user.model.js";
+
 export const register = async (req, res) => {
   try {
-    console.log("Register API hit");
+    console.log("📩 Register API hit");
 
     const { fullname, email, password, number } = req.body;
 
+    // ===== Validation =====
     if (!fullname || !email || !password || !number) {
       return res.status(400).json({
         success: false,
@@ -19,35 +23,74 @@ export const register = async (req, res) => {
       });
     }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    // Simple email + number validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       return res.status(400).json({
         success: false,
-        message: "User already exists with this email.",
+        message: "Invalid email format.",
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const numberRegex = /^[0-9]{10}$/; // 10 digit mobile
+    if (!numberRegex.test(number)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid mobile number format.",
+      });
+    }
 
-    await User.create({
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long.",
+      });
+    }
+
+    // ===== Check duplicates =====
+    const existingUser = await User.findOne({
+      $or: [{ email }, { number }],
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists with this email or number.",
+      });
+    }
+
+    // ===== Hash password =====
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const user = await User.create({
       fullname,
       email,
       password: hashedPassword,
-      number, // 👈 save number also
+      number,
     });
 
     return res.status(201).json({
       success: true,
       message: "Account created successfully.",
+      user: {
+        id: user._id,
+        fullname: user.fullname,
+        email: user.email,
+        number: user.number,
+      },
     });
   } catch (error) {
-    console.error("Register Error:", error);
+    console.error("❌ Register Error:", error.message);
     return res.status(500).json({
       success: false,
-      message: "Server error during registration.",
+      message:
+        process.env.NODE_ENV === "production"
+          ? "Server error. Please try again later."
+          : error.message,
     });
   }
 };
+
 
 
 // ========================= LOGIN =========================
