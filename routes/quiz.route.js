@@ -69,6 +69,7 @@ router.get("/:quizId", isAuthenticated, async (req, res) => {
 
     const formattedResults = results.map(r => {
       const user = users.find(u => u._id.toString() === r.userId.toString());
+      console.log(user);
       return {
         name: user?.fullname || "Unknown",
         email: user?.email || "Unknown",
@@ -162,35 +163,24 @@ router.post("/submit", isAuthenticated, async (req, res) => {
 /**
  * ✅ Check if user already attempted a quiz
  */
-router.get("/check/:quizId", isAuthenticated, async (req, res) => {
+// routes/quiz.routes.js
+router.get("/check-attempt/:quizId", isAuthenticated, async (req, res) => {
   try {
     const { quizId } = req.params;
     const userId = req.id;
 
-    const existingResult = await Result.findOne({ userId, quizId });
+    const attempt = await Result.findOne({ quizId, userId });
 
-    if (existingResult) {
-      return res.json({
-        success: true,
-        attempted: true,
-        message: "User has already attempted this quiz",
-        result: {
-          score: existingResult.score,
-          timeTaken: existingResult.timeTaken,
-          submittedAt: existingResult.submittedAt,
-        },
-      });
+    if (attempt) {
+      return res.json({ alreadyAttempted: true });
+    } else {
+      return res.json({ alreadyAttempted: false });
     }
-
-    res.json({
-      success: true,
-      attempted: false,
-      message: "User has not attempted this quiz yet",
-    });
   } catch (error) {
-    console.error("❌ Error checking quiz attempt:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 });
+
 
 export default router;

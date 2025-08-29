@@ -8,16 +8,16 @@ dotenv.config({});
 // ========================= REGISTER =========================
 export const register = async (req, res) => {
   try {
-    console.log("aa gya bhai")
-    const { fullname, email, password } = req.body;
+    console.log("Register API hit");
 
-    if (!fullname || !email || !password) {
+    const { fullname, email, password, number } = req.body;
+
+    if (!fullname || !email || !password || !number) {
       return res.status(400).json({
         success: false,
-        message: "Full name, email, and password are required.",
+        message: "Full name, email, password, and number are required.",
       });
     }
-    console.log("aa gya bhai")
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -26,18 +26,15 @@ export const register = async (req, res) => {
         message: "User already exists with this email.",
       });
     }
-    console.log("aa gya bhai")
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log("aa gya bhai")
 
     await User.create({
       fullname,
       email,
       password: hashedPassword,
+      number, // 👈 save number also
     });
-
-    console.log("aa gya bhai")
 
     return res.status(201).json({
       success: true,
@@ -51,6 +48,7 @@ export const register = async (req, res) => {
     });
   }
 };
+
 
 // ========================= LOGIN =========================
 export const login = async (req, res) => {

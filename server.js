@@ -9,6 +9,7 @@ import rateLimit from "express-rate-limit";
 
 import userRoute from "./routes/user.route.js";
 import quizRoute from "./routes/quiz.route.js";
+import adminRoute from "./routes/adminQuiz.route.js"
 import db_connect from "./database/db.connect.js";
 
 // ===== Load Environment Variables Early =====
@@ -51,6 +52,7 @@ app.get("/", (req, res) => {
 // ===== API Routes =====
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/quiz", quizRoute);
+app.use("/api/v1/admin", adminRoute);
 
 // ===== 404 Handler =====
 app.use((req, res, next) => {
