@@ -172,7 +172,7 @@ export const logout = async (req, res) => {
 
 export const getCurrentUser = (req, res) => {
   try {
-    if (!req.user) {
+    if (!req.id) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized. Please login again.",
