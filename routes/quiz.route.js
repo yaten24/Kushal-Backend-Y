@@ -149,6 +149,40 @@ router.post("/submit", isAuthenticated, async (req, res) => {
 });
 
 
+// ✅ Check if user has already attempted a quiz
+router.get("/check/:quizId", isAuthenticated, async (req, res) => {
+  try {
+    const { quizId } = req.params;
+    const userId = req.id; // from isAuthenticated middleware
+
+    // Check if result already exists for this user + quiz
+    const existingResult = await Result.findOne({ userId, quizId });
+
+    if (existingResult) {
+      return res.json({
+        success: true,
+        attempted: true,
+        message: "User has already attempted this quiz",
+        result: {
+          score: existingResult.score,
+          timeTaken: existingResult.timeTaken,
+          submittedAt: existingResult.submittedAt,
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      attempted: false,
+      message: "User has not attempted this quiz yet",
+    });
+
+  } catch (error) {
+    console.error("❌ Error checking quiz attempt:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 
 
 
