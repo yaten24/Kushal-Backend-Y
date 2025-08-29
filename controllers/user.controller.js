@@ -88,8 +88,6 @@ export const register = async (req, res) => {
   }
 };
 
-
-
 // ========================= LOGIN =========================
 export const login = async (req, res) => {
   try {
@@ -154,13 +152,10 @@ export const login = async (req, res) => {
 // ========================= LOGOUT =========================
 export const logout = async (req, res) => {
   try {
-    return res
-      .status(200)
-      .cookie("token", "", { maxAge: 0 })
-      .json({
-        success: true,
-        message: "Logged out successfully.",
-      });
+    return res.status(200).cookie("token", "", { maxAge: 0 }).json({
+      success: true,
+      message: "Logged out successfully.",
+    });
   } catch (error) {
     console.error("Logout Error:", error);
     return res.status(500).json({
@@ -172,29 +167,17 @@ export const logout = async (req, res) => {
 
 export const getCurrentUser = (req, res) => {
   try {
-    console.log(req.id)
-    if (!req.id) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized. Please login again.",
-      });
-    }
-    return res.status(200).json({
-      success: true,
-    });
+    // isAuthenticated middleware se req.user set ho chuka hoga
+    return res.status(200).json({ success: true });
   } catch (error) {
-    console.error("❌ Error in getCurrentUser:", error.message);
-
-    return res.status(500).json({
-      success: false,
-      message:
-        process.env.NODE_ENV === "production"
-          ? "Internal server error"
-          : error.message, // dev me actual error show hoga
-    });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Something went wrong while fetching user",
+      });
   }
 };
-
 
 // ✅ Save contact message
 export const createContact = async (req, res) => {
@@ -202,7 +185,9 @@ export const createContact = async (req, res) => {
     const { name, email, message } = req.body;
 
     if (!name || !email || !message) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
     }
 
     const newContact = await Contact.create({ name, email, message });
@@ -228,4 +213,3 @@ export const getContacts = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-
