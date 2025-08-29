@@ -2,14 +2,26 @@
   "version": 2,
   "builds": [
     {
+<<<<<<< HEAD
       "src": "package.json",
       "use": "@vercel/static-build"
+=======
+      "src": "server.js", 
+      "use": "@vercel/node"
+>>>>>>> 6e97b35001e0d58f0a965f53a9739b02fab569c5
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
+<<<<<<< HEAD
       "dest": "/index.html"
     }
   ]
+=======
+      "dest": "server.js"
+    }
+  ]
+
+>>>>>>> 6e97b35001e0d58f0a965f53a9739b02fab569c5
 }
