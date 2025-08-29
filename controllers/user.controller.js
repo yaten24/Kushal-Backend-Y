@@ -6,9 +6,6 @@ import dotenv from "dotenv";
 dotenv.config({});
 
 // ========================= REGISTER =========================
-import bcrypt from "bcryptjs";
-import User from "../models/user.model.js";
-
 export const register = async (req, res) => {
   try {
     console.log("📩 Register API hit");
