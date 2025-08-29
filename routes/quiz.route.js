@@ -6,71 +6,74 @@ import { User } from "../models/user.model.js";
 
 const router = express.Router();
 
-// Get all quizzes
+/**
+ * ✅ Get all quizzes
+ */
 router.get("/get-all-quizes", async (req, res) => {
   try {
-    console.log("aa gya bhai main");
     const quizzes = await Quiz.find();
-    console.log(quizzes);
-    res.json(quizzes);
+    res.json({ success: true, quizzes });
   } catch (error) {
+    console.error("❌ Error fetching quizzes:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// ✅ Get quiz by ID
+/**
+ * ✅ Get quiz by ID
+ */
 router.get("/get-quiz/:id", async (req, res) => {
   try {
-    console.log("aa gya bhai")
     const quiz = await Quiz.findById(req.params.id);
-
     if (!quiz) {
       return res.status(404).json({ success: false, message: "Quiz not found" });
     }
-    console.log("bhai database se quiz ka data aa gya hai")
     res.json({ success: true, quiz });
   } catch (error) {
+    console.error("❌ Error fetching quiz:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// Get all results of a user
-router.get("/user/:userId", isAuthenticated , async (req, res) => {
+/**
+ * ✅ Get all results of a specific user
+ */
+router.get("/user/:userId", isAuthenticated, async (req, res) => {
   try {
-    const results = await Result.find({ userId: req.params.userId }).populate("quizId", "title");
-    res.json(results);
+    const results = await Result.find({ userId: req.params.userId })
+      .populate("quizId", "title");
+
+    res.json({ success: true, results });
   } catch (error) {
+    console.error("❌ Error fetching user results:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// ✅ Get results of a quiz (with user name + email + score)
+/**
+ * ✅ Get results of a quiz (with user details + current user)
+ */
 router.get("/:quizId", isAuthenticated, async (req, res) => {
   try {
-    // ✅ Saare results nikal lo (with timeTaken)
     const results = await Result.find({ quizId: req.params.quizId })
       .select("userId score timeTaken");
 
-    // ✅ Saare userIds collect karo
     const userIds = results.map(r => r.userId);
     const currentUserId = req.id;
 
-    // ✅ Un sab users ki detail laao
     const users = await User.find({ _id: { $in: userIds } })
       .select("fullname email");
 
-    // ✅ Current user ki detail laao
     const currentUser = await User.findById(currentUserId)
       .select("fullname email");
 
-    // ✅ userId ke basis pe merge karo
     const formattedResults = results.map(r => {
       const user = users.find(u => u._id.toString() === r.userId.toString());
       return {
         name: user?.fullname || "Unknown",
         email: user?.email || "Unknown",
         score: r.score,
-        timeTaken: r.timeTaken || 0, // 👈 ye add kiya
+        timeTaken: r.timeTaken || 0,
       };
     });
 
@@ -89,50 +92,58 @@ router.get("/:quizId", isAuthenticated, async (req, res) => {
   }
 });
 
-
-
-
-// Get all participants of a specific quiz
+/**
+ * ✅ Get all participants of a specific quiz
+ */
 router.get("/quiz/:quizId/participants", async (req, res) => {
   try {
     const { quizId } = req.params;
 
-    // Find all results of this quiz
     const participants = await Result.find({ quizId })
-      .populate("userId", "name email")  // only name & email from User model
-      .populate("quizId", "title");      // quiz title
+      .populate("userId", "fullname email") // corrected: fullname
+      .populate("quizId", "title");
 
     if (!participants || participants.length === 0) {
-      return res.status(404).json({ message: "No participants found for this quiz" });
+      return res.status(404).json({
+        success: false,
+        message: "No participants found for this quiz",
+      });
     }
 
     res.json({
+      success: true,
       quiz: participants[0].quizId.title,
       totalParticipants: participants.length,
       participants: participants.map((p) => ({
-        user: p.userId.name,
+        name: p.userId.fullname,
         email: p.userId.email,
         score: p.score,
         totalQuestions: p.totalQuestions,
         correctAnswers: p.correctAnswers,
-        submittedAt: p.submittedAt
-      }))
+        submittedAt: p.submittedAt,
+      })),
     });
-
   } catch (error) {
+    console.error("❌ Error fetching participants:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// Submit quiz answers
+/**
+ * ✅ Submit quiz answers
+ */
 router.post("/submit", isAuthenticated, async (req, res) => {
   try {
-    const { quizId, score , timeTaken } = req.body;
+    const { quizId, score, timeTaken } = req.body;
     const userId = req.id;
+
     if (!quizId) {
-      return res.status(400).json({ success: false, message: "quizId is required" });
+      return res.status(400).json({
+        success: false,
+        message: "quizId is required",
+      });
     }
-    console.log(timeTaken)
+
     const newResult = new Result({
       userId,
       quizId,
@@ -143,19 +154,19 @@ router.post("/submit", isAuthenticated, async (req, res) => {
     await newResult.save();
     res.status(201).json({ success: true, result: newResult });
   } catch (error) {
-    console.error("Error while submitting quiz:", error);
+    console.error("❌ Error while submitting quiz:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-
-// ✅ Check if user has already attempted a quiz
+/**
+ * ✅ Check if user already attempted a quiz
+ */
 router.get("/check/:quizId", isAuthenticated, async (req, res) => {
   try {
     const { quizId } = req.params;
-    const userId = req.id; // from isAuthenticated middleware
+    const userId = req.id;
 
-    // Check if result already exists for this user + quiz
     const existingResult = await Result.findOne({ userId, quizId });
 
     if (existingResult) {
@@ -176,14 +187,10 @@ router.get("/check/:quizId", isAuthenticated, async (req, res) => {
       attempted: false,
       message: "User has not attempted this quiz yet",
     });
-
   } catch (error) {
     console.error("❌ Error checking quiz attempt:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
-
-
-
 
 export default router;
