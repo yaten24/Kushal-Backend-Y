@@ -172,19 +172,15 @@ export const logout = async (req, res) => {
 
 export const getCurrentUser = (req, res) => {
   try {
+    console.log(req.id)
     if (!req.id) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized. Please login again.",
       });
     }
-
-    // Password, tokens, etc. exclude karo
-    const { password, refreshToken, ...safeUser } = req.user._doc || req.user;
-
     return res.status(200).json({
       success: true,
-      user: safeUser,
     });
   } catch (error) {
     console.error("❌ Error in getCurrentUser:", error.message);
