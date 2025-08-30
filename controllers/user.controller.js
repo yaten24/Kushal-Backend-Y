@@ -150,15 +150,14 @@ export const login = async (req, res) => {
 };
 
 // ========================= LOGOUT =========================
-app.post("/logout", (req, res) => {
+export const logout = async (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: true,   // if using https
     sameSite: "none" // if frontend & backend are on different domains
   });
   return res.json({ success: true, message: "Logged out" });
-});
-
+};
 
 export const getCurrentUser = (req, res) => {
   try {
