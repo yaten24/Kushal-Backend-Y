@@ -1,26 +1,42 @@
 import jwt from "jsonwebtoken";
 
 const isAuthenticated = (req, res, next) => {
-    try {
-        const token = req.cookies.token;
-        if (!token) {
-            return res.status(401).json({
-                message: "User not authenticated",
-                success: false,
-            });
-        }
+  try {
+    // Token extract from cookies or Authorization header
+    const token =
+      req.cookies?.token ||
+      (req.headers["authorization"] &&
+        req.headers["authorization"].split(" ")[1]);
 
-        // Verify token
-        const decode = jwt.verify(token, process.env.SECRET_KEY);
-
-        req.id = decode.userId; // attach userId to request
-        next();
-    } catch (error) {
-        return res.status(401).json({
-            message: "Invalid or expired token",
-            success: false,
-        });
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication token is required",
+      });
     }
+
+    if (!process.env.SECRET_KEY) {
+      console.error("❌ SECRET_KEY not set in environment variables");
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+
+    // Verify token
+    const decode = jwt.verify(token, process.env.SECRET_KEY);
+
+    // Attach user id to request
+    req.id = decode.userId;
+
+    next();
+  } catch (error) {
+    console.error("JWT Error:", error.message);
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired authentication token",
+    });
+  }
 };
 
 export default isAuthenticated;
