@@ -25,6 +25,7 @@ const isAuthenticated = (req, res, next) => {
 
     // Verify token
     const decode = jwt.verify(token, process.env.SECRET_KEY);
+    console.log(decode)
 
     // Attach user id to request
     req.id = decode.userId;
