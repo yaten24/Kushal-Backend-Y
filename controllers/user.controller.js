@@ -150,20 +150,15 @@ export const login = async (req, res) => {
 };
 
 // ========================= LOGOUT =========================
-export const logout = async (req, res) => {
-  try {
-    return res.status(200).cookie("token", "", { maxAge: 0 }).json({
-      success: true,
-      message: "Logged out successfully.",
-    });
-  } catch (error) {
-    console.error("Logout Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error during logout.",
-    });
-  }
-};
+app.post("/logout", (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,   // if using https
+    sameSite: "none" // if frontend & backend are on different domains
+  });
+  return res.json({ success: true, message: "Logged out" });
+});
+
 
 export const getCurrentUser = (req, res) => {
   try {
